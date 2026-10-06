@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Payment Successful</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ========== CHOICE SCREEN ========== */
+    #choiceScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+    #choiceScreen h2 {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      color: #ccc;
+    }
+    .os-btn {
+      width: 90%;
+      max-width: 320px;
+      padding: 22px;
+      margin: 12px 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      color: #fff;
+    }
+    .ios-btn { background: linear-gradient(135deg, #555, #222); }
+    .android-btn { background: linear-gradient(135deg, #3ddc84, #1a8f4a); color: #000; }
+
+    /* ========== FAKE NOTIFICATION ========== */
+    #notifContainer {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      padding: 12px;
+      pointer-events: none;
+    }
+
+    /* Android style */
+    .android-notif {
+      background: #2c2c2c;
+      border-radius: 18px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      max-width: 420px;
+      margin: 0 auto;
+      animation: slideDown 0.45s ease;
+    }
+    .android-icon {
+      width: 42px; height: 42px;
+      background: #0f0;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .android-body { flex: 1; }
+    .android-app {
+      font-size: 0.78rem;
+      color: #aaa;
+      margin-bottom: 2px;
+    }
+    .android-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .android-msg {
+      font-size: 0.88rem;
+      color: #ccc;
+      margin-top: 2px;
+    }
+    .android-time {
+      font-size: 0.75rem;
+      color: #888;
+      align-self: flex-start;
+    }
+
+    /* iOS style */
+    .ios-notif {
+      background: rgba(60,60,67,0.92);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      max-width: 400px;
+      margin: 0 auto;
+      animation: slideDown 0.5s cubic-bezier(0.2,0.8,0.2,1);
+      border: 0.5px solid rgba(255,255,255,0.12);
+    }
+    .ios-icon {
+      width: 40px; height: 40px;
+      background: #34c759;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .ios-body { flex: 1; }
+    .ios-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+    .ios-app {
+      font-size: 0.78rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .ios-time {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    .ios-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .ios-msg {
+      font-size: 0.88rem;
+      color: #ccc;
+      margin-top: 1px;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-120%); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ========== BANK SCREEN ========== */
+    #bankScreen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .bank-card {
+      background: #111;
+      border-radius: 16px;
+      padding: 40px 30px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(0,255,100,0.25);
+      border: 1px solid #222;
+    }
+    .success-icon { font-size: 4rem; margin-bottom: 15px; }
+    .bank-card h1 { font-size: 1.6rem; color: #0f0; margin-bottom: 10px; }
+    .amount { font-size: 2.4rem; font-weight: bold; margin: 15px 0; }
+    .details { font-size: 0.95rem; color: #aaa; line-height: 1.6; margin-top: 15px; }
+    .account {
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-family: monospace;
+      font-size: 1.15rem;
+      color: #0ff;
+    }
+    .status-text {
+      margin-top: 25px;
+      font-size: 1.15rem;
+      min-height: 30px;
+      color: #ff0;
+      font-weight: 500;
+    }
+    .ok-btn {
+      display: none;
+      margin-top: 25px;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* ========== CHAOS ========== */
+    #chaosZone {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    #chaosZone h2 {
+      font-family: "Comic Sans MS", cursive;
+      font-size: 2rem;
+      color: #f0f;
+      text-shadow: 3px 3px 0 #0ff;
+      margin-bottom: 15px;
+      animation: shake 0.4s infinite;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .insult {
+      font-family: "Comic Sans MS", cursive;
+      font-size: 1.3rem;
+      color: #ff0;
+      margin: 15px 0;
+      min-height: 40px;
+    }
+    .video-box {
+      margin: 15px 0;
+      border: 4px solid #f0f;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    video { width: 100%; display: block; max-height: 280px; }
+    .back-btn {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 12px 30px;
+      background: #f0f;
+      color: #000;
+      font-family: "Comic Sans MS", cursive;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      text-decoration: none;
+      border: 3px solid #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. CHOICE -->
+  <div id="choiceScreen">
+    <h2>Select your phone</h2>
+    <button class="os-btn ios-btn" onclick="chooseOS('ios')">🍎 iPhone / iOS</button>
+    <button class="os-btn android-btn" onclick="chooseOS('android')">🤖 Android</button>
+  </div>
+
+  <!-- 2. FAKE NOTIFICATION -->
+  <div id="notifContainer"></div>
+
+  <!-- 3. BANK SCREEN -->
+  <div id="bankScreen">
+    <div class="bank-card">
+      <div class="success-icon">✅</div>
+      <h1>Payment Successful</h1>
+      <div class="amount">₹99.00</div>
+      <div class="details">has been deducted from your account</div>
+      <div class="account">******4821</div>
+      <div class="details" style="margin-top:18px;">
+        Transaction ID: TXN9283746510<br>
+        Time: Just now
+      </div>
+      <div class="status-text" id="statusText">Processing...</div>
+      <button class="ok-btn" id="okBtn" onclick="startChaos()">OK</button>
+    </div>
+  </div>
+
+  <!-- 4. CHAOS -->
+  <div id="chaosZone">
+    <h2>JUST KIDDING 🖕</h2>
+    <div class="insult" id="chaosInsult">this is why your parents fight</div>
+
+    <div class="video-box">
+      <video id="laugh1" src="Laugh - 1.mp4" playsinline></video>
+    </div>
+    <div class="video-box">
+      <video id="laugh2" src="Laugh - 2.mp4" playsinline></video>
+    </div>
+    <div class="video-box">
+      <video id="laugh3" src="Laugh - 3.mp4" playsinline></video>
+    </div>
+
+    <a href="index.html" class="back-btn">← go back to the playlist</a>
+  </div>
+
+  <!-- Notification sounds -->
+  <audio id="androidSound" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+  <audio id="iosSound" preload="auto" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg"></audio>
+
+  <script>
+    let selectedOS = null;
+
+    function chooseOS(os) {
+      selectedOS = os;
+      document.getElementById('choiceScreen').style.display = 'none';
+
+      // Show notification
+      const container = document.getElementById('notifContainer');
+      container.style.display = 'block';
+
+      if (os === 'android') {
+        container.innerHTML = `
+          <div class="android-notif">
+            <div class="android-icon">🏦</div>
+            <div class="android-body">
+              <div class="android-app">HDFC Bank</div>
+              <div class="android-title">Amount Debited</div>
+              <div class="android-msg">INR 99.00 debited from A/c XX4821 on ${new Date().toLocaleDateString('en-IN')}.</div>
+            </div>
+            <div class="android-time">now</div>
+          </div>
+        `;
+        const s = document.getElementById('androidSound');
+        s.currentTime = 0;
+        s.play().catch(()=>{});
+      } else {
+        container.innerHTML = `
+          <div class="ios-notif">
+            <div class="ios-icon">🏦</div>
+            <div class="ios-body">
+              <div class="ios-header">
+                <div class="ios-app">HDFC Bank</div>
+                <div class="ios-time">now</div>
+              </div>
+              <div class="ios-title">Amount Debited</div>
+              <div class="ios-msg">₹99.00 has been debited from your account ending 4821.</div>
+            </div>
+          </div>
+        `;
+        const s = document.getElementById('iosSound');
+        s.currentTime = 0;
+        s.play().catch(()=>{});
+      }
+
+      // Vibrate
+      if (navigator.vibrate) navigator.vibrate([180, 80, 180]);
+
+      // After 3.5s hide notif and show bank screen
+      setTimeout(() => {
+        container.style.display = 'none';
+        document.getElementById('bankScreen').style.display = 'flex';
+
+        // Continue bank flow
+        setTimeout(() => {
+          document.getElementById('statusText').textContent = "Letting your mom know...";
+          document.getElementById('statusText').style.color = "#f80";
+          if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+        }, 2500);
+
+        setTimeout(() => {
+          document.getElementById('statusText').textContent = "Done.";
+          document.getElementById('statusText').style.color = "#0f0";
+          document.getElementById('okBtn').style.display = 'block';
+        }, 5000);
+      }, 3500);
+    }
+
+    function startChaos() {
+      document.getElementById('bankScreen').style.display = 'none';
+      document.getElementById('chaosZone').style.display = 'block';
+
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100, 50, 100, 50, 400]);
+      }
+
+      const v1 = document.getElementById('laugh1');
+      const v2 = document.getElementById('laugh2');
+      const v3 = document.getElementById('laugh3');
+
+      v1.muted = false;
+      v1.play().catch(()=>{});
+
+      v1.onended = () => { v2.muted = false; v2.play().catch(()=>{}); };
+      v2.onended = () => { v3.muted = false; v3.play().catch(()=>{}); };
+      v3.onended = () => { v1.currentTime = 0; v1.play().catch(()=>{}); };
+    }
+
+    // Insults
+    const insults = [
+      "this is why your parents fight",
+      "go touch grass immediately",
+      "skill issue detected 💀",
+      "your mom already knows",
+      "ratio + L + no bitches",
+      "NPC behaviour",
+      "touch some grass rn",
+      "this is peak mid"
+    ];
+    let i = 0;
+    setInterval(() => {
+      if (document.getElementById('chaosZone').style.display === 'block') {
+        i = (i + 1) % insults.length;
+        document.getElementById('chaosInsult').textContent = insults[i];
+      }
+    }, 2200);
+  </script>
+</body>
+</html>
