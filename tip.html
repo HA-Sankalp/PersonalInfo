@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Payment Successful</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== CHOICE SCREENS ===== */
+    .choice-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+    .choice-screen h2 {
+      font-size: 1.5rem;
+      margin-bottom: 28px;
+      color: #ccc;
+    }
+    .os-btn {
+      width: 90%;
+      max-width: 340px;
+      padding: 20px;
+      margin: 10px 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      color: #fff;
+      transition: transform 0.15s;
+    }
+    .os-btn:active { transform: scale(0.97); }
+    .mobile-btn { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #000; }
+    .laptop-btn { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .ios-btn { background: linear-gradient(135deg, #555, #222); }
+    .android-btn { background: linear-gradient(135deg, #3ddc84, #1a8f4a); color: #000; }
+    .windows-btn { background: linear-gradient(135deg, #0078d4, #005a9e); }
+    .mac-btn { background: linear-gradient(135deg, #555, #111); }
+    .ubuntu-btn { background: linear-gradient(135deg, #e95420, #c34113); }
+
+    /* ===== NOTIFICATION CONTAINER ===== */
+    #notifContainer {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      padding: 14px;
+      pointer-events: none;
+    }
+
+    /* Android */
+    .android-notif {
+      background: #2c2c2c;
+      border-radius: 18px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      max-width: 420px;
+      margin: 0 auto;
+      animation: slideDown 0.45s ease;
+    }
+    .android-icon {
+      width: 42px; height: 42px;
+      background: #0f0;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .android-body { flex: 1; }
+    .android-app { font-size: 0.78rem; color: #aaa; }
+    .android-title { font-size: 0.95rem; font-weight: 600; color: #fff; }
+    .android-msg { font-size: 0.88rem; color: #ccc; margin-top: 2px; }
+    .android-time { font-size: 0.75rem; color: #888; }
+
+    /* iOS */
+    .ios-notif {
+      background: rgba(60,60,67,0.92);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      max-width: 400px;
+      margin: 0 auto;
+      animation: slideDown 0.5s cubic-bezier(0.2,0.8,0.2,1);
+      border: 0.5px solid rgba(255,255,255,0.12);
+    }
+    .ios-icon {
+      width: 40px; height: 40px;
+      background: #34c759;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .ios-body { flex: 1; }
+    .ios-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
+    .ios-app { font-size: 0.78rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.3px; }
+    .ios-time { font-size: 0.75rem; color: #888; }
+    .ios-title { font-size: 0.95rem; font-weight: 600; color: #fff; }
+    .ios-msg { font-size: 0.88rem; color: #ccc; }
+
+    /* Windows 11 style */
+    .windows-notif {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+      max-width: 400px;
+      margin: 0 auto;
+      animation: slideDown 0.4s ease;
+      font-family: "Segoe UI", sans-serif;
+    }
+    .windows-icon {
+      width: 40px; height: 40px;
+      background: #0078d4;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .windows-body { flex: 1; }
+    .windows-app { font-size: 0.8rem; color: #aaa; margin-bottom: 2px; }
+    .windows-title { font-size: 0.95rem; font-weight: 600; color: #fff; }
+    .windows-msg { font-size: 0.88rem; color: #ccc; margin-top: 3px; }
+
+    /* macOS style */
+    .mac-notif {
+      background: rgba(40,40,40,0.95);
+      backdrop-filter: blur(30px);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+      max-width: 380px;
+      margin: 0 auto;
+      animation: slideDown 0.45s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .mac-icon {
+      width: 38px; height: 38px;
+      background: #30d158;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .mac-body { flex: 1; }
+    .mac-app { font-size: 0.78rem; color: #aaa; }
+    .mac-title { font-size: 0.95rem; font-weight: 600; color: #fff; }
+    .mac-msg { font-size: 0.88rem; color: #ccc; margin-top: 2px; }
+
+    /* Ubuntu / Linux style */
+    .ubuntu-notif {
+      background: #2d2d2d;
+      border-left: 5px solid #e95420;
+      border-radius: 6px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+      max-width: 400px;
+      margin: 0 auto;
+      animation: slideDown 0.4s ease;
+      font-family: "Ubuntu", "Segoe UI", sans-serif;
+    }
+    .ubuntu-icon {
+      width: 40px; height: 40px;
+      background: #e95420;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .ubuntu-body { flex: 1; }
+    .ubuntu-app { font-size: 0.8rem; color: #e95420; font-weight: 600; }
+    .ubuntu-title { font-size: 0.95rem; font-weight: 600; color: #fff; margin-top: 2px; }
+    .ubuntu-msg { font-size: 0.88rem; color: #ccc; margin-top: 3px; }
+
+    @keyframes slideDown {
+      from { transform: translateY(-130%); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ===== BANK SCREEN ===== */
+    #bankScreen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .bank-card {
+      background: #111;
+      border-radius: 16px;
+      padding: 40px 30px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(0,255,100,0.25);
+      border: 1px solid #222;
+    }
+    .success-icon { font-size: 4rem; margin-bottom: 15px; }
+    .bank-card h1 { font-size: 1.6rem; color: #0f0; margin-bottom: 10px; }
+    .amount { font-size: 2.4rem; font-weight: bold; margin: 15px 0; }
+    .details { font-size: 0.95rem; color: #aaa; line-height: 1.6; margin-top: 15px; }
+    .account {
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-family: monospace;
+      font-size: 1.15rem;
+      color: #0ff;
+    }
+    .status-text {
+      margin-top: 25px;
+      font-size: 1.15rem;
+      min-height: 30px;
+      color: #ff0;
+      font-weight: 500;
+    }
+    .ok-btn {
+      display: none;
+      margin-top: 25px;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: #0f0;
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* ===== CHAOS ===== */
+    #chaosZone {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    #chaosZone h2 {
+      font-family: "Comic Sans MS", cursive;
+      font-size: 2rem;
+      color: #f0f;
+      text-shadow: 3px 3px 0 #0ff;
+      margin-bottom: 15px;
+      animation: shake 0.4s infinite;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .insult {
+      font-family: "Comic Sans MS", cursive;
+      font-size: 1.3rem;
+      color: #ff0;
+      margin: 15px 0;
+      min-height: 40px;
+    }
+    .video-box {
+      margin: 15px 0;
+      border: 4px solid #f0f;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+    }
+    video { width: 100%; display: block; max-height: 280px; }
+    .back-btn {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 12px 30px;
+      background: #f0f;
+      color: #000;
+      font-family: "Comic Sans MS", cursive;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      text-decoration: none;
+      border: 3px solid #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LEVEL 1: Mobile or Laptop -->
+  <div class="choice-screen" id="level1">
+    <h2>What device are you on?</h2>
+    <button class="os-btn mobile-btn" onclick="showMobile()">📱 Mobile</button>
+    <button class="os-btn laptop-btn" onclick="showLaptop()">💻 Laptop / PC / Desktop</button>
+  </div>
+
+  <!-- LEVEL 2A: Mobile OS -->
+  <div class="choice-screen" id="level2mobile" style="display:none;">
+    <h2>Select your phone</h2>
+    <button class="os-btn ios-btn" onclick="showNotif('ios')">🍎 iPhone / iOS</button>
+    <button class="os-btn android-btn" onclick="showNotif('android')">🤖 Android</button>
+  </div>
+
+  <!-- LEVEL 2B: Laptop OS -->
+  <div class="choice-screen" id="level2laptop" style="display:none;">
+    <h2>Select your OS</h2>
+    <button class="os-btn windows-btn" onclick="showNotif('windows')">🪟 Windows</button>
+    <button class="os-btn mac-btn" onclick="showNotif('mac')">🍎 macOS</button>
+    <button class="os-btn ubuntu-btn" onclick="showNotif('ubuntu')">🐧 Ubuntu / Linux</button>
+  </div>
+
+  <!-- NOTIFICATION -->
+  <div id="notifContainer"></div>
+
+  <!-- BANK SCREEN -->
+  <div id="bankScreen">
+    <div class="bank-card">
+      <div class="success-icon">✅</div>
+      <h1>Payment Successful</h1>
+      <div class="amount">₹99.00</div>
+      <div class="details">has been deducted from your account</div>
+      <div class="account">******4821</div>
+      <div class="details" style="margin-top:18px;">
+        Transaction ID: TXN9283746510<br>
+        Time: Just now
+      </div>
+      <div class="status-text" id="statusText">Processing...</div>
+      <button class="ok-btn" id="okBtn" onclick="startChaos()">OK</button>
+    </div>
+  </div>
+
+  <!-- CHAOS -->
+  <div id="chaosZone">
+    <h2>JUST KIDDING 🖕</h2>
+    <div class="insult" id="chaosInsult">this is why your parents fight</div>
+
+    <div class="video-box">
+      <video id="laugh1" src="Laugh - 1.mp4" playsinline></video>
+    </div>
+    <div class="video-box">
+      <video id="laugh2" src="Laugh - 2.mp4" playsinline></video>
+    </div>
+    <div class="video-box">
+      <video id="laugh3" src="Laugh - 3.mp4" playsinline></video>
+    </div>
+
+    <a href="index.html" class="back-btn">← go back to the playlist</a>
+  </div>
+
+  <!-- sounds -->
+  <audio id="notifSound" preload="auto" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+  <script>
+    function showMobile() {
+      document.getElementById('level1').style.display = 'none';
+      document.getElementById('level2mobile').style.display = 'flex';
+    }
+    function showLaptop() {
+      document.getElementById('level1').style.display = 'none';
+      document.getElementById('level2laptop').style.display = 'flex';
+    }
+
+    function showNotif(os) {
+      document.getElementById('level2mobile').style.display = 'none';
+      document.getElementById('level2laptop').style.display = 'none';
+
+      const container = document.getElementById('notifContainer');
+      container.style.display = 'block';
+
+      const dateStr = new Date().toLocaleDateString('en-IN');
+      let html = '';
+
+      if (os === 'android') {
+        html = `
+          <div class="android-notif">
+            <div class="android-icon">🏦</div>
+            <div class="android-body">
+              <div class="android-app">HDFC Bank</div>
+              <div class="android-title">Amount Debited</div>
+              <div class="android-msg">INR 99.00 debited from A/c XX4821 on ${dateStr}.</div>
+            </div>
+            <div class="android-time">now</div>
+          </div>`;
+      } else if (os === 'ios') {
+        html = `
+          <div class="ios-notif">
+            <div class="ios-icon">🏦</div>
+            <div class="ios-body">
+              <div class="ios-header">
+                <div class="ios-app">HDFC Bank</div>
+                <div class="ios-time">now</div>
+              </div>
+              <div class="ios-title">Amount Debited</div>
+              <div class="ios-msg">₹99.00 has been debited from your account ending 4821.</div>
+            </div>
+          </div>`;
+      } else if (os === 'windows') {
+        html = `
+          <div class="windows-notif">
+            <div class="windows-icon">🏦</div>
+            <div class="windows-body">
+              <div class="windows-app">HDFC Bank</div>
+              <div class="windows-title">Amount Debited</div>
+              <div class="windows-msg">₹99.00 has been debited from account XX4821.</div>
+            </div>
+          </div>`;
+      } else if (os === 'mac') {
+        html = `
+          <div class="mac-notif">
+            <div class="mac-icon">🏦</div>
+            <div class="mac-body">
+              <div class="mac-app">HDFC Bank</div>
+              <div class="mac-title">Amount Debited</div>
+              <div class="mac-msg">₹99.00 debited from account ending 4821.</div>
+            </div>
+          </div>`;
+      } else if (os === 'ubuntu') {
+        html = `
+          <div class="ubuntu-notif">
+            <div class="ubuntu-icon">🏦</div>
+            <div class="ubuntu-body">
+              <div class="ubuntu-app">HDFC Bank</div>
+              <div class="ubuntu-title">Amount Debited</div>
+              <div class="ubuntu-msg">₹99.00 has been debited from A/c XX4821.</div>
+            </div>
+          </div>`;
+      }
+
+      container.innerHTML = html;
+
+      // play sound + vibrate
+      const sound = document.getElementById('notifSound');
+      sound.currentTime = 0;
+      sound.play().catch(()=>{});
+      if (navigator.vibrate) navigator.vibrate([180, 80, 180]);
+
+      // after 3.8s go to bank screen
+      setTimeout(() => {
+        container.style.display = 'none';
+        document.getElementById('bankScreen').style.display = 'flex';
+
+        setTimeout(() => {
+          document.getElementById('statusText').textContent = "Letting your mom know...";
+          document.getElementById('statusText').style.color = "#f80";
+          if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+        }, 2500);
+
+        setTimeout(() => {
+          document.getElementById('statusText').textContent = "Done.";
+          document.getElementById('statusText').style.color = "#0f0";
+          document.getElementById('okBtn').style.display = 'block';
+        }, 5000);
+      }, 3800);
+    }
+
+    function startChaos() {
+      document.getElementById('bankScreen').style.display = 'none';
+      document.getElementById('chaosZone').style.display = 'block';
+
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100, 50, 400]);
+
+      const v1 = document.getElementById('laugh1');
+      const v2 = document.getElementById('laugh2');
+      const v3 = document.getElementById('laugh3');
+
+      v1.muted = false;
+      v1.play().catch(()=>{});
+      v1.onended = () => { v2.muted = false; v2.play().catch(()=>{}); };
+      v2.onended = () => { v3.muted = false; v3.play().catch(()=>{}); };
+      v3.onended = () => { v1.currentTime = 0; v1.play().catch(()=>{}); };
+    }
+
+    const insults = [
+      "this is why your parents fight",
+      "go touch grass immediately",
+      "skill issue detected 💀",
+      "your mom already knows",
+      "ratio + L + no bitches",
+      "NPC behaviour",
+      "touch some grass rn",
+      "this is peak mid"
+    ];
+    let i = 0;
+    setInterval(() => {
+      if (document.getElementById('chaosZone').style.display === 'block') {
+        i = (i + 1) % insults.length;
+        document.getElementById('chaosInsult').textContent = insults[i];
+      }
+    }, 2200);
+  </script>
+</body>
+</html>
